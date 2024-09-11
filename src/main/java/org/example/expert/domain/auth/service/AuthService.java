@@ -26,20 +26,27 @@ public class AuthService {
 
     @Transactional
     public SignupResponse signup(SignupRequest signupRequest) {
+        String email = signupRequest.getEmail();
+        if (email == null || email.trim().isEmpty())
+            throw new InvalidRequestException("이메일은 필수 입력 항목입니다.");
 
-        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
+        if (userRepository.existsByEmail(email))
+            throw new InvalidRequestException("이미 존재하는 이메일입니다.");
+
+        String password = signupRequest.getPassword();
+        if (password == null || password.trim().isEmpty())
+            throw new InvalidRequestException("비밀번호는 필수 입력 항목입니다.");
+
+        String encodedPassword = passwordEncoder.encode(password);
 
         UserRole userRole = UserRole.of(signupRequest.getUserRole());
-
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new InvalidRequestException("이미 존재하는 이메일입니다.");
-        }
 
         User newUser = new User(
                 signupRequest.getEmail(),
                 encodedPassword,
                 userRole
         );
+
         User savedUser = userRepository.save(newUser);
 
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), userRole);
