@@ -8,6 +8,7 @@ import org.example.expert.domain.comment.repository.CommentRepository;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.common.exception.ServerException;
+import org.example.expert.domain.manager.entity.Manager;
 import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.entity.User;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +63,35 @@ class CommentServiceTest {
         }
 
         @Test
+        public void 할일의_담당자가_아닌_경우_comment_등록_시_에러가_발생한다(){
+            // given
+            long todoId = 1L;
+            CommentSaveRequest request = new CommentSaveRequest("contents");
+            AuthUser authUser = new AuthUser(1L, "email", UserRole.USER);
+            User user = User.fromAuthUser(authUser);
+            User managerUser = new User("manager@example.com", "password", UserRole.USER);
+            ReflectionTestUtils.setField(managerUser, "id", 2L);
+
+            Todo todo = new Todo("title", "title", "contents", managerUser);
+            ReflectionTestUtils.setField(todo, "id", todoId);
+
+            // manager 리스트 초기화 및 설정
+            List<Manager> managers = new ArrayList<>();
+            managers.add(new Manager(managerUser, todo));
+            ReflectionTestUtils.setField(todo, "managers", managers);
+
+            given(todoRepository.findById(anyLong())).willReturn(Optional.of(todo));
+
+            // when
+            InvalidRequestException exception = assertThrows(InvalidRequestException.class, () ->{
+                commentService.saveComment(authUser, todoId, request);
+            });
+
+            // then
+            assertEquals("관리자만 댓글을 추가할 수 있습니다.", exception.getMessage());
+        }
+
+        @Test
         public void comment를_정상적으로_등록한다() {
             // given
             long todoId = 1;
@@ -68,6 +99,7 @@ class CommentServiceTest {
             AuthUser authUser = new AuthUser(1L, "email", UserRole.USER);
             User user = User.fromAuthUser(authUser);
             Todo todo = new Todo("title", "title", "contents", user);
+            ReflectionTestUtils.setField(todo, "id", todoId);
             Comment comment = new Comment(request.getContents(), user, todo);
 
             given(todoRepository.findById(anyLong())).willReturn(Optional.of(todo));
