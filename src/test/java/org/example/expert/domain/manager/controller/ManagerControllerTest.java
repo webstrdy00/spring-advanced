@@ -1,8 +1,6 @@
 package org.example.expert.domain.manager.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.example.expert.config.AuthUserArgumentResolver;
 import org.example.expert.config.GlobalExceptionHandler;
 import org.example.expert.config.JwtUtil;
