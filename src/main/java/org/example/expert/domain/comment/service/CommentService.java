@@ -31,6 +31,13 @@ public class CommentService {
         User user = User.fromAuthUser(authUser);
         Todo todo = todoRepository.findById(todoId).orElseThrow(() ->
                 new InvalidRequestException("Todo not found"));
+        
+        // 요구사항 : 할일의 담당자가 아니면 댓글을 달 수 없도록 예외 처리
+        boolean isManager = todo.getManagers().stream()
+                .anyMatch(manager -> manager.getUser().getId().equals(user.getId()));
+
+        if (!isManager)
+            throw new InvalidRequestException("관리자만 댓글을 추가할 수 있습니다.");
 
         Comment newComment = new Comment(
                 commentSaveRequest.getContents(),
