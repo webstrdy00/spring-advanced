@@ -45,4 +45,8 @@ public class Todo extends Timestamped {
         this.title = title;
         this.contents = contents;
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
